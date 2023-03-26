@@ -54,7 +54,7 @@ class ShowArticle(Resource):
 class Login(Resource):
 
     def post(self):
-        
+        # get the username from form
         username = request.get_json().get('username')
         user = User.query.filter(User.username == username).first()
 
@@ -84,15 +84,36 @@ class CheckSession(Resource):
         
         return {}, 401
 
+# @app.before_request
+# def check_id_login():
+#     if not session["user_id"]:
+#         return {}, 401
+
+
 class MemberOnlyIndex(Resource):
     
     def get(self):
-        pass
+        # ==== check if logged in =====
+        if not session["user_id"]:
+            return {}, 401
+        # =============================
+        # return the JSON data for the members-only articles
+        articles = Article.query.filter(Article.is_member_only==True).all()
+        articles_dict = [article.to_dict() for article in articles]
+        return make_response(articles_dict, 200)
 
 class MemberOnlyArticle(Resource):
     
     def get(self, id):
-        pass
+        # ==== check if logged in =====
+        if not session["user_id"]:
+            return {}, 401
+        # =============================
+        # return the JSON data for members-only article by ID,
+        article = Article.query.filter(Article.id==id).first()
+        return make_response(article.to_dict(), 200)
+
+        
 
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
